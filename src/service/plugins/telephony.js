@@ -94,6 +94,10 @@ var Plugin = GObject.registerClass({
 
         if (pulseaudio) {
             switch (this.settings.get_string(`${eventType}-volume`)) {
+                case 'nothing':
+                    pulseaudio.restore();
+                    break;
+
                 case 'lower':
                     pulseaudio.lowerVolume();
                     break;
