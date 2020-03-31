@@ -51,6 +51,19 @@ var Plugin = GObject.registerClass({
 
     _init(device) {
         super._init(device, 'telephony');
+
+        // Setup a  launcher with env variables for commands
+        let application = GLib.build_filenamev([
+            gsconnect.extdatadir,
+            'service',
+            'daemon.js'
+        ]);
+        this._launch = new Gio.SubprocessLauncher();
+        this._launch.setenv('GSCONNECT', application, false);
+        this._launch.setenv('GSCONNECT_DEVICE_ID', this.device.id, false);
+        this._launch.setenv('GSCONNECT_DEVICE_NAME', this.device.name, false);
+        this._launch.setenv('GSCONNECT_DEVICE_ICON', this.device.icon_name, false);
+        this._launch.setenv('GSCONNECT_DEVICE_DBUS', this.device.g_object_path, false);
     }
 
     get legacy_sms() {
@@ -110,6 +123,14 @@ var Plugin = GObject.registerClass({
             if (eventType === 'talking' && this.settings.get_boolean('talking-microphone')) {
                 pulseaudio.muteMicrophone();
             }
+
+            // custom stuff...
+            if (eventType === 'ringing') {
+                this._handleCustomCommand('ringing');
+            }
+            if (eventType === 'talking') {
+                this._handleCustomCommand('talking');
+            }
         }
 
         // Media Playback
@@ -117,6 +138,32 @@ var Plugin = GObject.registerClass({
 
         if (mpris && this.settings.get_boolean(`${eventType}-pause`)) {
             mpris.pauseAll();
+        }
+    }
+
+    /**
+     * Handle a request to execute the local command with the UUID @key
+     * @param {String} state - talking or restore
+     */
+    _handleCustomCommand(state) {
+        log(`customcommand: ${state}`);
+        try {
+            let proc = this._launch.spawnv([
+                '/bin/sh',
+                '-c',
+                `/home/dennis/gsconnect_tests/custom_command.sh ${state}`
+            ]);
+            proc.wait_check_async(null, this._commandExit);
+        } catch (e) {
+            logError(e, this.device.name);
+        }
+    }
+
+    _commandExit(proc, res) {
+        try {
+            proc.wait_check_finish(res);
+        } catch (e) {
+            debug(e);
         }
     }
 
@@ -137,6 +184,9 @@ var Plugin = GObject.registerClass({
 
         if (pulseaudio) {
             pulseaudio.restore();
+
+            // custom-stuff for restoring
+            this._handleCustomCommand('restore');
         }
     }
 
