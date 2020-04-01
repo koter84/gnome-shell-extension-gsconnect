@@ -181,12 +181,20 @@ msgstr ""
 msgid "Pause Media"
 msgstr ""
 
+#: data/ui/device-preferences.ui:1270 data/ui/device-preferences.ui:1437
+msgid "Run Command"
+msgstr ""
+
 #: data/ui/device-preferences.ui:1323
 msgid "Ongoing Calls"
 msgstr ""
 
 #: data/ui/device-preferences.ui:1493
 msgid "Mute Microphone"
+msgstr ""
+
+#: data/ui/device-preferences.ui:1323
+msgid "Ended Calls"
 msgstr ""
 
 #: data/ui/device-preferences.ui:1547 data/ui/device-preferences.ui:2348

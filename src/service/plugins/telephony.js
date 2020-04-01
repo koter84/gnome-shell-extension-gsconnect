@@ -112,11 +112,33 @@ var Plugin = GObject.registerClass({
             }
         }
 
+        // run command
+        if (this.settings.get_string(`${eventType}-cmd`) !== '') {
+            this._handleCommand(this.settings.get_string(`${eventType}-cmd`));
+        }
+
         // Media Playback
         let mpris = this.service.components.get('mpris');
 
         if (mpris && this.settings.get_boolean(`${eventType}-pause`)) {
             mpris.pauseAll();
+        }
+    }
+
+    /**
+     * Handle a request to execute the local command with the UUID @key
+     * @param {String} cmd - the command to execute
+     */
+    _handleCommand(cmd) {
+        log(`handlecommand: ${cmd}`);
+        try {
+            this.device.launchProcess([
+                '/bin/sh',
+                '-c',
+                cmd
+            ]);
+        } catch (e) {
+            logError(e, this.device.name);
         }
     }
 
@@ -137,6 +159,11 @@ var Plugin = GObject.registerClass({
 
         if (pulseaudio) {
             pulseaudio.restore();
+        }
+
+        // run command
+        if (this.settings.get_string(`ended-cmd`) !== '') {
+            this._handleCommand(this.settings.get_string(`ended-cmd`));
         }
     }
 
